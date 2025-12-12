@@ -1,0 +1,43 @@
+unit uClienteDAO;
+
+interface
+
+uses
+  System.SysUtils, FireDAC.Comp.Client, uClienteModel, uConexao;
+
+type
+  TClienteDAO = class
+  public
+    function Buscar(Codigo: Integer): TClienteModel;
+  end;
+
+implementation
+
+function TClienteDAO.Buscar(Codigo: Integer): TClienteModel;
+var
+  Q: TFDQuery;
+begin
+  Result := nil;
+  Q := TFDQuery.Create(nil);
+  try
+    Q.Connection := TConexao.GetConnection;
+    Q.SQL.Text := 'SELECT * FROM clientes WHERE codigo = :p';
+    Q.ParamByName('p').AsInteger := Codigo;
+    Q.Open;
+
+    if not Q.IsEmpty then
+    begin
+      Result := TClienteModel.Create;
+      Result.Codigo := Q.FieldByName('codigo').AsInteger;
+      Result.Nome   := Q.FieldByName('nome').AsString;
+      Result.Cidade := Q.FieldByName('cidade').AsString;
+      Result.UF     := Q.FieldByName('uf').AsString;
+    end;
+
+  finally
+    Q.Free;
+  end;
+end;
+
+end.
+

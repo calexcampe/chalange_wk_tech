@@ -1,0 +1,23 @@
+# Delphi / RAD Studio
+*.dproj.local
+*.identcache
+*.res
+*.exe
+*.dll
+*.map
+*.rsm
+*.tds
+*.dcu
+*.~*
+__history/
+
+# Build folders
+Win32/
+Win64/
+
+# IDE
+.history/
+
+# OS
+Thumbs.db
+.DS_Store
