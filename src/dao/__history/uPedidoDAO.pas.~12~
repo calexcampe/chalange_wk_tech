@@ -1,0 +1,193 @@
+unit uPedidoDAO;
+
+interface
+
+uses
+  System.SysUtils, FireDAC.Comp.Client, FireDAC.Stan.Option,
+  uPedidoModel, uPedidoItemModel, uConexao, System.Generics.Collections;
+
+type
+  TPedidoDAO = class
+  private
+    function GerarNumeroPedido: Integer;
+  public
+    procedure GravarPedido(Pedido: TPedidoModel);
+    function CarregarPedido(Numero: Integer): TPedidoModel;
+    procedure CancelarPedido(Numero: Integer);
+  end;
+
+implementation
+
+{ TPedidoDAO }
+
+function TPedidoDAO.GerarNumeroPedido: Integer;
+var
+  Q: TFDQuery;
+begin
+  Q := TFDQuery.Create(nil);
+  try
+    Q.Connection := TConexao.GetConnection;
+    Q.SQL.Text   := 'SELECT COALESCE(MAX(numero_pedido),0)+1 AS prox FROM pedidos';
+    Q.Open;
+    Result := Q.FieldByName('prox').AsInteger;
+  finally
+    Q.Free;
+  end;
+end;
+
+procedure TPedidoDAO.GravarPedido(Pedido: TPedidoModel);
+var
+  Conn: TFDConnection;
+  Q: TFDQuery;
+  Item: TPedidoItemModel;
+begin
+  Conn := TConexao.GetConnection;
+  Conn.StartTransaction;
+
+  try
+    Pedido.Numero := GerarNumeroPedido;
+
+    // Grava pedido principal
+    Q := TFDQuery.Create(nil);
+    try
+      Q.Connection := Conn;
+      Q.SQL.Text :=
+        'INSERT INTO pedidos (numero_pedido, data_emissao, codigo_cliente, valor_total) '+
+        'VALUES (:n, :d, :c, :v)';
+
+      Q.ParamByName('n').AsInteger := Pedido.Numero;
+      Q.ParamByName('d').AsDateTime := Pedido.Data;
+      Q.ParamByName('c').AsInteger := Pedido.CodCliente;
+      Q.ParamByName('v').AsFloat := Pedido.ValorTotal;
+
+      Q.ExecSQL;
+    finally
+      Q.Free;
+    end;
+
+    // Grava itens
+    for Item in Pedido.Itens do
+    begin
+      Q := TFDQuery.Create(nil);
+      try
+        Q.Connection := Conn;
+        Q.SQL.Text :=
+          'INSERT INTO pedidos_produtos (numero_pedido, codigo_produto, quantidade, vr_unitario, vr_total) '+
+          'VALUES (:n, :p, :q, :u, :t)';
+
+        Q.ParamByName('n').AsInteger := Pedido.Numero;
+        Q.ParamByName('p').AsInteger := Item.CodigoProduto;
+        Q.ParamByName('q').AsFloat   := Item.Quantidade;
+        Q.ParamByName('u').AsFloat   := Item.VrUnitario;
+        Q.ParamByName('t').AsFloat   := Item.VrTotal;
+
+        Q.ExecSQL;
+      finally
+        Q.Free;
+      end;
+    end;
+
+    Conn.Commit;
+  except
+    Conn.Rollback;
+    raise;
+  end;
+end;
+
+function TPedidoDAO.CarregarPedido(Numero: Integer): TPedidoModel;
+var
+  Conn: TFDConnection;
+  Q: TFDQuery;
+  Item: TPedidoItemModel;
+begin
+  Result := TPedidoModel.Create;
+  Conn := TConexao.GetConnection;
+
+  // Carrega cabeçalho
+  Q := TFDQuery.Create(nil);
+  try
+    Q.Connection := Conn;
+    Q.SQL.Text := 'SELECT * FROM pedidos WHERE numero_pedido = :n';
+    Q.ParamByName('n').AsInteger := Numero;
+    Q.Open;
+
+    if Q.IsEmpty then
+      Exit(nil);
+
+    Result.Numero        := Numero;
+    Result.Data   := Q.FieldByName('data_emissao').AsDateTime;
+    Result.CodCliente := Q.FieldByName('codigo_cliente').AsInteger;
+    Result.ValorTotal    := Q.FieldByName('valor_total').AsFloat;
+
+  finally
+    Q.Free;
+  end;
+
+  // Carrega itens
+  Result.Itens.Clear;
+
+  Q := TFDQuery.Create(nil);
+  try
+    Q.Connection := Conn;
+    Q.SQL.Text :=
+      'SELECT * FROM pedidos_produtos WHERE numero_pedido = :n ORDER BY autoincrem';
+    Q.ParamByName('n').AsInteger := Numero;
+    Q.Open;
+
+    while not Q.Eof do
+    begin
+      Item := TPedidoItemModel.Create;
+
+      Item.AutoInc      := Q.FieldByName('autoincrem').AsInteger;
+      Item.CodigoProduto:= Q.FieldByName('codigo_produto').AsInteger;
+      Item.Quantidade   := Q.FieldByName('quantidade').AsFloat;
+      Item.VrUnitario   := Q.FieldByName('vr_unitario').AsFloat;
+      Item.VrTotal      := Q.FieldByName('vr_total').AsFloat;
+
+      Result.Itens.Add(Item);
+
+      Q.Next;
+    end;
+  finally
+    Q.Free;
+  end;
+end;
+
+procedure TPedidoDAO.CancelarPedido(Numero: Integer);
+var
+  Conn: TFDConnection;
+  Q: TFDQuery;
+begin
+  Conn := TConexao.GetConnection;
+  Conn.StartTransaction;
+
+  try
+    Q := TFDQuery.Create(nil);
+    try
+      Q.Connection := Conn;
+      Q.SQL.Text := 'DELETE FROM pedidos_produtos WHERE numero_pedido = :n';
+      Q.ParamByName('n').AsInteger := Numero;
+      Q.ExecSQL;
+    finally
+      Q.Free;
+    end;
+
+    Q := TFDQuery.Create(nil);
+    try
+      Q.Connection := Conn;
+      Q.SQL.Text := 'DELETE FROM pedidos WHERE numero_pedido = :n';
+      Q.ParamByName('n').AsInteger := Numero;
+      Q.ExecSQL;
+    finally
+      Q.Free;
+    end;
+
+    Conn.Commit;
+  except
+    Conn.Rollback;
+    raise;
+  end;
+end;
+
+end.
+

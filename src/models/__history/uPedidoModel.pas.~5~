@@ -1,0 +1,24 @@
+unit uPedidoModel;
+
+interface
+
+uses
+  System.Generics.Collections;
+
+type
+  TPedidoModel = class
+  public
+    Numero: Integer;
+    Data: TDate;
+    CodCliente: Integer;
+    ValorTotal: Double;
+    Itens: TObjectList<TPedidoItemModel>;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+implementation
+
+end.
+
+

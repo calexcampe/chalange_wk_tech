@@ -1,0 +1,10 @@
+type
+  TPedidoItem = class
+  public
+    AutoInc: Integer;
+    Numero: Integer;
+    CodProduto: Integer;
+    Quantidade: Double;
+    ValorUnit: Double;
+    ValorTotal: Double;
+  end;

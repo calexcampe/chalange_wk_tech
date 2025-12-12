@@ -1,0 +1,8 @@
+type
+  TProduto = class
+  public
+    Codigo: Integer;
+    Descricao: string;
+    Preco: Double;
+  end;
+

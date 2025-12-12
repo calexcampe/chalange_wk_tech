@@ -1,0 +1,59 @@
+unit uConexao;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, IniFiles,
+  FireDAC.Comp.Client, FireDAC.UI.Intf, FireDAC.Stan.Intf,
+  FireDAC.Phys.MySQL, FireDAC.Phys.MySQLDef, FireDAC.Stan.Def,
+  FireDAC.Stan.Async, FireDAC.DApt;
+
+type
+  TConexao = class
+  private
+    class var FConnection: TFDConnection;
+    class procedure Configurar;
+  public
+    class function GetConnection: TFDConnection;
+  end;
+
+implementation
+
+class procedure TConexao.Configurar;
+var
+  Ini: TIniFile;
+  PathINI: string;
+begin
+  PathINI := ExtractFilePath(ParamStr(0)) + 'config.ini';
+  Ini := TIniFile.Create(PathINI);
+  try
+    FConnection := TFDConnection.Create(nil);
+    FConnection.LoginPrompt := False;
+
+    FConnection.Params.Clear;
+    FConnection.Params.DriverID := 'MySQL';
+    FConnection.Params.Database := Ini.ReadString('DB', 'Database', '');
+    FConnection.Params.UserName := Ini.ReadString('DB', 'Username', '');
+    FConnection.Params.Password := Ini.ReadString('DB', 'Password', '');
+    FConnection.Params.Add('Server=' + Ini.ReadString('DB', 'Server', 'localhost'));
+    FConnection.Params.Add('Port='   + Ini.ReadString('DB', 'Port', '3306'));
+    FConnection.Params.Add('CharacterSet=utf8');
+    FConnection.Params.Add('SSLMode=none');
+
+    // Biblioteca do MySQL
+    FConnection.Params.Add('VendorLib=' + Ini.ReadString('DB', 'Lib', 'libmysql.dll'));
+
+  finally
+    Ini.Free;
+  end;
+end;
+
+class function TConexao.GetConnection: TFDConnection;
+begin
+  if FConnection = nil then
+    Configurar;
+  Result := FConnection;
+end;
+
+end.
+

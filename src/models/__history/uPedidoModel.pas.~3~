@@ -1,0 +1,12 @@
+type
+  TPedido = class
+  public
+    Numero: Integer;
+    Data: TDate;
+    CodCliente: Integer;
+    ValorTotal: Double;
+    Itens: TObjectList<TPedidoItem>;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
