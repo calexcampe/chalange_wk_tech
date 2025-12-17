@@ -3,7 +3,7 @@ object frmPedidoView: TfrmPedidoView
   Top = 0
   Caption = 'Pedidos'
   ClientHeight = 406
-  ClientWidth = 730
+  ClientWidth = 868
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -42,7 +42,7 @@ object frmPedidoView: TfrmPedidoView
     ParentFont = False
   end
   object Label3: TLabel
-    Left = 239
+    Left = 490
     Top = 77
     Width = 29
     Height = 19
@@ -55,7 +55,7 @@ object frmPedidoView: TfrmPedidoView
     ParentFont = False
   end
   object Label4: TLabel
-    Left = 367
+    Left = 597
     Top = 77
     Width = 88
     Height = 19
@@ -180,9 +180,10 @@ object frmPedidoView: TfrmPedidoView
     Font.Style = []
     ParentFont = False
     TabOrder = 3
+    OnExit = edtCodProdutoExit
   end
   object edtQtd: TEdit
-    Left = 239
+    Left = 490
     Top = 109
     Width = 89
     Height = 21
@@ -190,14 +191,14 @@ object frmPedidoView: TfrmPedidoView
     Text = '1'
   end
   object edtVrUnit: TEdit
-    Left = 363
+    Left = 593
     Top = 109
     Width = 121
     Height = 21
     TabOrder = 5
   end
   object btnInserirItem: TBitBtn
-    Left = 490
+    Left = 720
     Top = 99
     Width = 130
     Height = 40
@@ -271,13 +272,19 @@ object frmPedidoView: TfrmPedidoView
   object sgItens: TStringGrid
     Left = 24
     Top = 158
-    Width = 686
+    Width = 826
     Height = 193
     FixedCols = 0
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
     TabOrder = 7
     OnKeyDown = sgItensKeyDown
+    ColWidths = (
+      109
+      177
+      102
+      147
+      138)
   end
   object btnGravar: TBitBtn
     Left = 24
@@ -508,6 +515,14 @@ object frmPedidoView: TfrmPedidoView
     ParentFont = False
     ReadOnly = True
     TabOrder = 11
+  end
+  object edtDescricaoProduto: TEdit
+    Left = 195
+    Top = 109
+    Width = 289
+    Height = 21
+    ReadOnly = True
+    TabOrder = 12
   end
   object FDGUIxWaitCursor1: TFDGUIxWaitCursor
     Provider = 'Forms'
